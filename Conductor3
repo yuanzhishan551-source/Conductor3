@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 指挥家 - 交响乐团版</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jeju+Hallasan&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            overflow: hidden; 
+            background: #FFFFFF;
+            color: white; 
+            font-family: 'Jeju Hallasan', 'Segoe UI', monospace;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        /* 响应式容器包装器 - 填满整个屏幕 */
+        #stage-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: #FFFFFF;
+        }
+
+        /* 舞台容器 - 1440x1024 设计稿，自动缩放 */
+        #stage-container {
+            position: relative;
+            width: 1440px;
+            height: 1024px;
+            background: #FFFFFF;
+            transform-origin: center center;
+        }
+
+        /* 乐器人物层 */
+        .musician {
+            position: absolute;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* 摇晃动画 */
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-3deg); }
+            75% { transform: rotate(3deg); }
+        }
+        
+        .musician.active {
+            opacity: 1;
+            animation: shake 0.5s ease-in-out infinite;
+        }
+
+        /* 小提琴需要保持水平翻转 */
+        .musician.flipped {
+            transform: scaleX(-1);
+        }
+        
+        .musician.flipped.active {
+            animation: shake-flipped 0.5s ease-in-out infinite;
+        }
+        
+        @keyframes shake-flipped {
+            0%, 100% { transform: scaleX(-1) rotate(0deg); }
+            25% { transform: scaleX(-1) rotate(-3deg); }
+            75% { transform: scaleX(-1) rotate(3deg); }
+        }
+
+        /* 钢琴1 */
+        #piano1 {
+            left: 16px;
+            top: 152px;
+            width: 395px;
+            height: 279px;
+        }
+        
+        /* 钢琴2 */
+        #piano2 {
+            left: 16px;
+            top: 414px;
+            width: 395px;
+            height: 279px;
+        }
+
+        /* 锣（代替管乐） */
+        #gong {
+            left: 416px;
+            top: 268px;
+            width: 220px;
+            height: 292px;
+        }
+
+        /* 小提琴1 */
+        #violin1 {
+            left: 773px;
+            top: 268px;
+            width: 162px;
+            height: 292px;
+        }
+        
+        /* 小提琴2 */
+        #violin2 {
+            left: 935px;
+            top: 316px;
+            width: 162px;
+            height: 292px;
+        }
+        
+        /* 小提琴3 */
+        #violin3 {
+            left: 1053px;
+            top: 90px;
+            width: 162px;
+            height: 292px;
+        }
+        
+        /* 小提琴4 */
+        #violin4 {
+            left: 872px;
+            top: 0px;
+            width: 162px;
+            height: 292px;
+        }
+
+        /* 鼓1 */
+        #drum1 {
+            left: 1154px;
+            top: 316px;
+            width: 182px;
+            height: 356px;
+        }
+        
+        /* 鼓2 */
+        #drum2 {
+            left: 1297px;
+            top: 382px;
+            width: 182px;
+            height: 356px;
+        }
+        
+        /* 视频容器 */
+        #video-container {
+            position: absolute;
+            left: 587px;
+            top: 672px;
+            width: 314px;
+            height: 240px;
+            border: 2px solid #cccccc;
+            border-radius: 15px;
+            overflow: hidden;
+            z-index: 2;
+            background: #D9D9D9;
+        }
+
+        #video-element {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; 
+            transform: scaleX(-1); 
+            filter: grayscale(100%) contrast(1.2) brightness(0.5); 
+            transition: opacity 1s;
+        }
+
+        /* 3D 渲染层覆盖整个视口 */
+        #canvas-container { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: 3; 
+            pointer-events: none;
+        }
+        
+        #ui-layer {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        #center-controls {
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            text-align: center; 
+            pointer-events: auto;
+            z-index: 100;
+        }
+        
+        #start-btn {
+            padding: 20px 60px; 
+            font-size: 20px; 
+            background: rgba(0,0,0,0.7);
+            color: #fff; 
+            border: 2px solid #666666; 
+            cursor: pointer; 
+            text-transform: uppercase;
+            letter-spacing: 6px; 
+            transition: all 0.3s; 
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+        }
+        
+        #start-btn:hover { 
+            background: #333333; 
+            color: #fff; 
+            transform: scale(1.05);
+        }
+        
+        .hidden { 
+            display: none !important; 
+        }
+        
+        /* 提示文字样式 */
+        .hint-text {
+            position: fixed;
+            font-family: 'Jeju Hallasan', sans-serif;
+            font-size: 24px;
+            color: rgba(0, 0, 0, 0.3);
+            letter-spacing: 2px;
+            z-index: 5;
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+        
+        #hint-higher {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        #hint-lower {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        #hint-left {
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%) rotate(90deg);
+            transform-origin: center center;
+        }
+        
+        #hint-right {
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+            transform-origin: center center;
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+</head>
+<body>
+
+    <div id="stage-wrapper">
+        <div id="stage-container">
+            <!-- 乐器人物 -->
+            <img src="https://files.catbox.moe/gnzoyh.png" class="musician" id="piano1" data-channel="piano" alt="钢琴1">
+            <img src="https://files.catbox.moe/gnzoyh.png" class="musician" id="piano2" data-channel="piano" alt="钢琴2">
+            
+            <img src="https://files.catbox.moe/7czsxd.png" class="musician" id="gong" data-channel="wind" alt="锣">
+            
+            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin1" data-channel="strings" alt="小提琴1">
+            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin2" data-channel="strings" alt="小提琴2">
+            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin3" data-channel="strings" alt="小提琴3">
+            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin4" data-channel="strings" alt="小提琴4">
+            
+            <img src="https://files.catbox.moe/wwztqt.png" class="musician" id="drum1" data-channel="drum" alt="鼓1">
+            <img src="https://files.catbox.moe/wwztqt.png" class="musician" id="drum2" data-channel="drum" alt="鼓2">
+
+            <!-- 视频容器 -->
+            <div id="video-container">
+                <video id="video-element" playsinline></video>
+            </div>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <!-- 提示文字 -->
+    <div id="hint-higher" class="hint-text">Higher Volume</div>
+    <div id="hint-lower" class="hint-text">Lower Volume</div>
+    <div id="hint-left" class="hint-text">Lower Speed</div>
+    <div id="hint-right" class="hint-text">Lower Speed</div>
+
+    <div id="ui-layer">
+        <div id="center-controls">
+            <button id="start-btn">START CONDUCTING</button>
+        </div>
+    </div>
+
+<script>
+// ================= 响应式缩放 =================
+function scaleStage() {
+    const container = document.getElementById('stage-container');
+    
+    const designWidth = 1440;
+    const designHeight = 1024;
+    
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    // 计算缩放比例，保持宽高比
+    const scaleX = windowWidth / designWidth;
+    const scaleY = windowHeight / designHeight;
+    const scale = Math.min(scaleX, scaleY);
+    
+    container.style.transform = `scale(${scale})`;
+}
+
+// 初始化时调用
+scaleStage();
+
+// 窗口大小改变时重新计算
+window.addEventListener('resize', scaleStage);
+
+// ================= 配置区域 =================
+const HISTORY_SIZE = 90;
+const MIN_BPM = 60;
+const MAX_BPM = 180;
+const STOP_THRESHOLD = 0.005; 
+const FINGER_COLORS = { thumb: 0xff00cc, index: 0xffcc00, middle: 0x00ff00, ring: 0x00ffff, pinky: 0xaa00ff };
+const FINGER_MAP = [
+    { name: 'thumb', tips: [1,2,3,4], color: FINGER_COLORS.thumb },
+    { name: 'index', tips: [5,6,7,8], color: FINGER_COLORS.index },
+    { name: 'middle', tips: [9,10,11,12], color: FINGER_COLORS.middle },
+    { name: 'ring', tips: [13,14,15,16], color: FINGER_COLORS.ring },
+    { name: 'pinky', tips: [17,18,19,20], color: FINGER_COLORS.pinky }
+];
+
+let currentState = 'IDLE';
+let scene, camera, renderer;
+let handMeshes = { left: null, right: null };
+let channels = {};
+let recorder, analyser, particleSystem;
+let speedHistory = new Array(HISTORY_SIZE).fill(0);
+let previousHandPositions = { left: null, right: null };
+let fistHoldFrameCount = 0;
+let frameCount = 0;
+let currentPlaybackRate = 1.0;
+
+const CAM_Z = 8; 
+
+// ================= 乐器人物动画 =================
+function updateMusicianAnimations(channelStates) {
+    const musicians = document.querySelectorAll('.musician[data-channel]');
+    musicians.forEach(musician => {
+        const channel = musician.getAttribute('data-channel');
+        if (channelStates[channel]) {
+            musician.classList.add('active');
+        } else {
+            musician.classList.remove('active');
+        }
+    });
+}
+
+// ================= 视口计算工具 =================
+function getVisiblePlane(depth, camera) {
+    const vFOV = camera.fov * Math.PI / 180; 
+    const height = 2 * Math.tan(vFOV / 2) * depth;
+    const width = height * camera.aspect;
+    return { width, height };
+}
+
+// ================= Three.js 骨骼类 =================
+class Hand3D {
+    constructor(scene) {
+        this.scene = scene;
+        this.joints = [];
+        this.bones = [];
+        
+        const jointGeo = new THREE.SphereGeometry(0.12, 16, 16);
+        for(let i=0; i<21; i++) {
+            const mat = new THREE.MeshBasicMaterial({ color: 0x888888 });
+            const mesh = new THREE.Mesh(jointGeo, mat);
+            this.scene.add(mesh);
+            this.joints.push(mesh);
+        }
+        
+        const connections = [[0,1],[1,2],[2,3],[3,4], [0,5],[5,6],[6,7],[7,8], [0,9],[9,10],[10,11],[11,12], [0,13],[13,14],[14,15],[15,16], [0,17],[17,18],[18,19],[19,20], [5,9],[9,13],[13,17]];
+        connections.forEach(pair => {
+            const line = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]),
+                new THREE.LineBasicMaterial({ color: 0x888888, transparent: true, opacity: 0.6, linewidth: 2 })
+            );
+            line.userData = { start: pair[0], end: pair[1] };
+            this.scene.add(line);
+            this.bones.push(line);
+        });
+    }
+
+    update(landmarks) {
+        const visible = getVisiblePlane(CAM_Z, camera);
+        
+        landmarks.forEach((lm, i) => {
+            const x = (0.5 - lm.x) * visible.width;
+            const y = (0.5 - lm.y) * visible.height;
+            const z = -lm.z * 15; 
+
+            this.joints[i].position.set(x, y, z);
+            this.joints[i].visible = true;
+        });
+
+        this.bones.forEach(bone => {
+            bone.geometry.setFromPoints([this.joints[bone.userData.start].position, this.joints[bone.userData.end].position]);
+            bone.visible = true;
+        });
+        
+        this.updateColors(landmarks);
+    }
+
+    updateColors(landmarks) {
+        const wrist = landmarks[0];
+        FINGER_MAP.forEach(f => {
+            const tip = landmarks[f.tips[3]];
+            const pip = landmarks[f.tips[1]];
+            const distTip = Math.sqrt(Math.pow(tip.x-wrist.x,2)+Math.pow(tip.y-wrist.y,2));
+            const distPip = Math.sqrt(Math.pow(pip.x-wrist.x,2)+Math.pow(pip.y-wrist.y,2));
+            
+            const isExtended = distTip > distPip + 0.05;
+            // 竖起来（激活）时变成黑色，否则保持灰色
+            const color = isExtended ? 0x000000 : 0x888888;
+            const opacity = isExtended ? 1.0 : 0.6;
+
+            f.tips.forEach(idx => {
+                this.joints[idx].material.color.setHex(color);
+            });
+            this.bones.forEach(b => {
+                if (f.tips.includes(b.userData.end) && b.userData.end !== 0) {
+                    b.material.color.setHex(color);
+                    b.material.opacity = opacity;
+                }
+            });
+        });
+    }
+
+    hide() { this.joints.forEach(j=>j.visible=false); this.bones.forEach(b=>b.visible=false); }
+}
+
+function initThree() {
+    const container = document.getElementById('canvas-container');
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100);
+    camera.position.z = CAM_Z;
+    
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    container.appendChild(renderer.domElement);
+    
+    handMeshes.left = new Hand3D(scene);
+    handMeshes.right = new Hand3D(scene);
+
+    const light = new THREE.PointLight(0xffffff, 1, 100);
+    light.position.set(0, 0, 10);
+    scene.add(light);
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+}
+
+// ================= 音频逻辑 =================
+async function initAudio() {
+    await Tone.start();
+    recorder = new Tone.Recorder();
+
+    channels.drum = new Tone.GrainPlayer({
+        url: "https://raw.githubusercontent.com/yuanzhishan551-source/Conductor-/main/1123398047-1-16_drum_split_by_lalalai.mp4",
+        loop: true,
+        grainSize: 0.1,
+        overlap: 0.05
+    }).toDestination().connect(recorder);
+
+    channels.piano = new Tone.GrainPlayer({
+        url: "https://raw.githubusercontent.com/yuanzhishan551-source/Conductor-/main/1123398047-1-16_piano_split_by_lalalai.mp3",
+        loop: true,
+        grainSize: 0.1,
+        overlap: 0.05
+    }).toDestination().connect(recorder);
+
+    channels.strings = new Tone.GrainPlayer({
+        url: "https://raw.githubusercontent.com/yuanzhishan551-source/Conductor-/main/1123398047-1-16_strings_split_by_lalalai.mp4",
+        loop: true,
+        grainSize: 0.1,
+        overlap: 0.05
+    }).toDestination().connect(recorder);
+
+    channels.wind = new Tone.GrainPlayer({
+        url: "https://raw.githubusercontent.com/yuanzhishan551-source/Conductor-/main/1123398047-1-16_wind_split_by_lalalai.mp4",
+        loop: true,
+        grainSize: 0.1,
+        overlap: 0.05
+    }).toDestination().connect(recorder);
+
+    channels.drum.volume.value = -Infinity;
+    channels.piano.volume.value = -Infinity;
+    channels.strings.volume.value = -Infinity;
+    channels.wind.volume.value = -Infinity;
+
+    Tone.Destination.volume.value = 10; // 提高整体音量基线
+
+    await Promise.all([Tone.loaded()]);
+
+    channels.drum.start();
+    channels.piano.start();
+    channels.strings.start();
+    channels.wind.start();
+}
+
+// ================= 交互处理 =================
+function processConducting(results) {
+    const hands = results.multiHandLandmarks;
+    const handedness = results.multiHandedness;
+
+    handMeshes.left.hide(); handMeshes.right.hide();
+    let currentLeftPos = null, currentRightPos = null;
+
+    if (hands.length > 0) {
+        hands.forEach((lm, i) => {
+            const label = handedness[i].label;
+            
+            if (label === 'Right') {
+                handMeshes.right.update(lm);
+                currentRightPos = lm[0];
+            } else {
+                handMeshes.left.update(lm);
+                currentLeftPos = lm[0];
+            }
+        });
+    }
+
+    calculateDynamics(currentLeftPos, currentRightPos);
+    updateChannelSwitches(hands, handedness);
+    checkStopGesture(hands);
+}
+
+function calculateDynamics(leftPos, rightPos) {
+    // 新的交互逻辑：基于两只手之间的距离控制播放速度
+    // 距离越远 -> 播放越慢，距离越近 -> 播放越快
+    
+    if (leftPos && rightPos) {
+        // 计算两只手之间的距离
+        const distance = Math.hypot(leftPos.x - rightPos.x, leftPos.y - rightPos.y);
+        
+        // 将距离映射到播放速度
+        // 距离接近0（手靠近） -> 速度2.0（快）
+        // 距离接近1（手远离） -> 速度0.5（慢）
+        // 使用指数函数使变化更平滑
+        currentPlaybackRate = 2.0 - (distance * 1.5);
+        currentPlaybackRate = Math.max(0.5, Math.min(2.0, currentPlaybackRate));
+        
+        // 确保音乐在播放
+        if(Tone.Transport.state !== 'started') Tone.Transport.start();
+        Tone.Destination.volume.rampTo(10, 0.02); // 保持较高的整体音量
+        
+    } else {
+        // 只有一只手或没有手时，保持中等速度
+        currentPlaybackRate = 1.0;
+    }
+    
+    // 更新所有音轨的播放速度
+    if (channels.drum) channels.drum.playbackRate = currentPlaybackRate;
+    if (channels.piano) channels.piano.playbackRate = currentPlaybackRate;
+    if (channels.strings) channels.strings.playbackRate = currentPlaybackRate;
+    if (channels.wind) channels.wind.playbackRate = currentPlaybackRate;
+}
+
+function updateChannelSwitches(hands, handedness) {
+    // 新的交互逻辑：手的高度（Y坐标）控制乐器音量
+    // Y坐标：0（屏幕顶端）到1（屏幕底端）
+    // 手在中间(0.5)时为正常音量(0dB)，在顶端时为更高音量
+    
+    // 初始化每个乐器的状态
+    let instrumentControl = {
+        drum: { active: false, volume: -Infinity, maxHeight: 1 },
+        piano: { active: false, volume: -Infinity, maxHeight: 1 },
+        strings: { active: false, volume: -Infinity, maxHeight: 1 },
+        wind: { active: false, volume: -Infinity, maxHeight: 1 }
+    };
+    
+    // 处理每只手
+    hands.forEach((lm, i) => {
+        const wrist = lm[0];
+        const handHeight = wrist.y; // Y坐标，0到1
+        
+        // 检测每个手指是否伸展
+        FINGER_MAP.forEach(f => {
+            const tip = lm[f.tips[3]];
+            const pip = lm[f.tips[1]];
+            const distTip = Math.hypot(tip.x - wrist.x, tip.y - wrist.y);
+            const distPip = Math.hypot(pip.x - wrist.x, pip.y - wrist.y);
+            const isExtended = distTip > distPip + 0.05;
+            
+            // 根据手指映射到乐器
+            let instrument = null;
+            if (f.name === 'index') instrument = 'drum';
+            else if (f.name === 'middle') instrument = 'piano';
+            else if (f.name === 'ring') instrument = 'strings';
+            else if (f.name === 'pinky') instrument = 'wind';
+            
+            if (instrument && isExtended) {
+                instrumentControl[instrument].active = true;
+                // 记录最小的Y值（最靠近顶端的手）
+                if (handHeight < instrumentControl[instrument].maxHeight) {
+                    instrumentControl[instrument].maxHeight = handHeight;
+                }
+            }
+        });
+    });
+    
+    // 根据高度计算音量并应用
+    const t = 0.1;
+    Object.keys(instrumentControl).forEach(inst => {
+        const control = instrumentControl[inst];
+        if (control.active) {
+            // Y=0.5(中间)时为0dB，Y=0(顶端)时为+15dB，Y=1(底端)时为-15dB
+            const volume = (0.5 - control.maxHeight) * 30;
+            channels[inst].volume.rampTo(volume, t);
+        } else {
+            channels[inst].volume.rampTo(-Infinity, t);
+        }
+    });
+
+    // 更新乐器人物动画
+    updateMusicianAnimations({
+        drum: instrumentControl.drum.active,
+        piano: instrumentControl.piano.active,
+        strings: instrumentControl.strings.active,
+        wind: instrumentControl.wind.active
+    });
+}
+
+function checkStopGesture(hands) {
+    if (hands.length === 1) {
+        const wrist = hands[0][0];
+        let folded = 0;
+        [8,12,16,20].forEach(i => {
+            const d = Math.hypot(hands[0][i].x-wrist.x, hands[0][i].y-wrist.y);
+            if (d < 0.15) folded++;
+        });
+        if (folded >= 4) {
+            fistHoldFrameCount++;
+            if (fistHoldFrameCount > 60) finishPerformance();
+        } else {
+            fistHoldFrameCount = 0;
+        }
+    }
+}
+
+async function finishPerformance() {
+    currentState = 'VISUALIZING';
+    
+    document.getElementById('video-element').style.opacity = '0';
+    setTimeout(() => { 
+        document.getElementById('video-container').style.display = 'none'; 
+        document.querySelectorAll('.musician').forEach(m => m.style.display = 'none');
+        document.getElementById('stage-wrapper').style.background = '#000000';
+        // 隐藏提示文字
+        document.querySelectorAll('.hint-text').forEach(h => h.style.display = 'none');
+    }, 1000);
+
+    Tone.Transport.stop();
+    const blob = await recorder.stop();
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a'); 
+    a.href = url; 
+    a.download = 'symphony_recording.webm'; 
+    a.click();
+
+    const player = new Tone.Player(url).toDestination();
+    player.autostart = true; 
+    player.loop = true;
+    analyser = new Tone.Analyser("fft", 1024);
+    player.connect(analyser);
+
+    createCosmos();
+}
+
+function createCosmos() {
+    handMeshes.left.hide(); 
+    handMeshes.right.hide();
+    renderer.setClearColor(0x000000, 1);
+
+    const count = 30000;
+    const geo = new THREE.BufferGeometry();
+    const pos = []; 
+    const col = [];
+    const c1 = new THREE.Color(0x00ffff), c2 = new THREE.Color(0xff00ff);
+
+    for(let i=0; i<count; i++) {
+        let x = Math.random()*50-25;
+        let y = Math.random()*50-25;
+        let z = Math.random()*50-25;
+        pos.push(x,y,z);
+        const dist = Math.sqrt(x*x+y*y+z*z);
+        const mixed = c1.clone().lerp(c2, dist/30);
+        col.push(mixed.r, mixed.g, mixed.b);
+    }
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    
+    const mat = new THREE.PointsMaterial({ size: 0.15, vertexColors: true, blending: THREE.AdditiveBlending, transparent: true });
+    particleSystem = new THREE.Points(geo, mat);
+    scene.add(particleSystem);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    if (currentState === 'VISUALIZING' && particleSystem) {
+        particleSystem.rotation.y += 0.002;
+        const val = analyser.getValue()[10];
+        const scale = 1 + (val+100)/150;
+        particleSystem.scale.setScalar(scale);
+    }
+    renderer.render(scene, camera);
+}
+
+const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+hands.onResults(processConducting);
+
+document.getElementById('start-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('start-btn');
+    btn.innerText = 'LOADING...';
+    btn.disabled = true;
+
+    try {
+        document.getElementById('center-controls').classList.add('hidden');
+
+        initThree();
+        await initAudio();
+
+        const video = document.getElementById('video-element');
+        const cam = new Camera(video, {
+            onFrame: async () => {
+                await hands.send({image: video});
+            },
+            width: 1280, 
+            height: 720
+        });
+        
+        await cam.start();
+        recorder.start();
+        currentState = 'CONDUCTING';
+        animate();
+    } catch(error) {
+        alert('摄像头启动失败: ' + error.message);
+        console.error(error);
+        btn.innerText = 'START CONDUCTING';
+        btn.disabled = false;
+        document.getElementById('center-controls').classList.remove('hidden');
+    }
+});
+</script>
+</body>
+</html>
