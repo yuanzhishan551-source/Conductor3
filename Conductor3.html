@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 指挥家 - 交响乐团版</title>
+    <title>AI Conductor - Symphony Orchestra Edition</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Jeju+Hallasan&display=swap');
         
@@ -22,7 +22,7 @@
             height: 100vh;
         }
         
-        /* 响应式容器包装器 - 填满整个屏幕 */
+        /* Responsive container wrapper - fills entire screen */
         #stage-wrapper {
             position: fixed;
             top: 0;
@@ -36,7 +36,7 @@
             background: #FFFFFF;
         }
 
-        /* 舞台容器 - 1440x1024 设计稿，自动缩放 */
+        /* Stage container - 1440x1024 design, auto-scaling */
         #stage-container {
             position: relative;
             width: 1440px;
@@ -45,14 +45,14 @@
             transform-origin: center center;
         }
 
-        /* 乐器人物层 */
+        /* Musician layer */
         .musician {
             position: absolute;
             opacity: 0.6;
             transition: opacity 0.3s ease;
         }
         
-        /* 摇晃动画 */
+        /* Shake animation */
         @keyframes shake {
             0%, 100% { transform: rotate(0deg); }
             25% { transform: rotate(-3deg); }
@@ -64,7 +64,7 @@
             animation: shake 0.5s ease-in-out infinite;
         }
 
-        /* 小提琴需要保持水平翻转 */
+        /* Violins need to maintain horizontal flip */
         .musician.flipped {
             transform: scaleX(-1);
         }
@@ -79,7 +79,7 @@
             75% { transform: scaleX(-1) rotate(3deg); }
         }
 
-        /* 钢琴1 */
+        /* Piano 1 */
         #piano1 {
             left: 16px;
             top: 152px;
@@ -87,7 +87,7 @@
             height: 279px;
         }
         
-        /* 钢琴2 */
+        /* Piano 2 */
         #piano2 {
             left: 16px;
             top: 414px;
@@ -95,7 +95,7 @@
             height: 279px;
         }
 
-        /* 锣（代替管乐） */
+        /* Gong (replacing wind instruments) */
         #gong {
             left: 416px;
             top: 268px;
@@ -103,7 +103,7 @@
             height: 292px;
         }
 
-        /* 小提琴1 */
+        /* Violin 1 */
         #violin1 {
             left: 773px;
             top: 268px;
@@ -111,7 +111,7 @@
             height: 292px;
         }
         
-        /* 小提琴2 */
+        /* Violin 2 */
         #violin2 {
             left: 935px;
             top: 316px;
@@ -119,7 +119,7 @@
             height: 292px;
         }
         
-        /* 小提琴3 */
+        /* Violin 3 */
         #violin3 {
             left: 1053px;
             top: 90px;
@@ -127,7 +127,7 @@
             height: 292px;
         }
         
-        /* 小提琴4 */
+        /* Violin 4 */
         #violin4 {
             left: 872px;
             top: 0px;
@@ -135,7 +135,7 @@
             height: 292px;
         }
 
-        /* 鼓1 */
+        /* Drum 1 */
         #drum1 {
             left: 1154px;
             top: 316px;
@@ -143,7 +143,7 @@
             height: 356px;
         }
         
-        /* 鼓2 */
+        /* Drum 2 */
         #drum2 {
             left: 1297px;
             top: 382px;
@@ -151,7 +151,7 @@
             height: 356px;
         }
         
-        /* 视频容器 */
+        /* Video container */
         #video-container {
             position: absolute;
             left: 587px;
@@ -174,7 +174,7 @@
             transition: opacity 1s;
         }
 
-        /* 3D 渲染层覆盖整个视口 */
+        /* 3D rendering layer covers entire viewport */
         #canvas-container { 
             position: fixed; 
             top: 0; 
@@ -229,7 +229,7 @@
             display: none !important; 
         }
         
-        /* 提示文字样式 */
+        /* Hint text styles */
         .hint-text {
             position: fixed;
             font-family: 'Jeju Hallasan', sans-serif;
@@ -278,21 +278,21 @@
 
     <div id="stage-wrapper">
         <div id="stage-container">
-            <!-- 乐器人物 -->
-            <img src="https://files.catbox.moe/gnzoyh.png" class="musician" id="piano1" data-channel="piano" alt="钢琴1">
-            <img src="https://files.catbox.moe/gnzoyh.png" class="musician" id="piano2" data-channel="piano" alt="钢琴2">
-            
-            <img src="https://files.catbox.moe/7czsxd.png" class="musician" id="gong" data-channel="wind" alt="锣">
-            
-            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin1" data-channel="strings" alt="小提琴1">
-            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin2" data-channel="strings" alt="小提琴2">
-            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin3" data-channel="strings" alt="小提琴3">
-            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin4" data-channel="strings" alt="小提琴4">
-            
-            <img src="https://files.catbox.moe/wwztqt.png" class="musician" id="drum1" data-channel="drum" alt="鼓1">
-            <img src="https://files.catbox.moe/wwztqt.png" class="musician" id="drum2" data-channel="drum" alt="鼓2">
+            <!-- Musicians -->
+            <img src="https://files.catbox.moe/gnzoyh.png" class="musician" id="piano1" data-channel="piano" alt="Piano 1">
+            <img src="https://files.catbox.moe/gnzoyh.png" class="musician" id="piano2" data-channel="piano" alt="Piano 2">
 
-            <!-- 视频容器 -->
+            <img src="https://files.catbox.moe/7czsxd.png" class="musician" id="gong" data-channel="wind" alt="Gong">
+
+            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin1" data-channel="strings" alt="Violin 1">
+            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin2" data-channel="strings" alt="Violin 2">
+            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin3" data-channel="strings" alt="Violin 3">
+            <img src="https://files.catbox.moe/90gmz5.png" class="musician flipped" id="violin4" data-channel="strings" alt="Violin 4">
+
+            <img src="https://files.catbox.moe/wwztqt.png" class="musician" id="drum1" data-channel="drum" alt="Drum 1">
+            <img src="https://files.catbox.moe/wwztqt.png" class="musician" id="drum2" data-channel="drum" alt="Drum 2">
+
+            <!-- Video container -->
             <div id="video-container">
                 <video id="video-element" playsinline></video>
             </div>
@@ -301,7 +301,7 @@
 
     <div id="canvas-container"></div>
 
-    <!-- 提示文字 -->
+    <!-- Hint texts -->
     <div id="hint-higher" class="hint-text">Higher Volume</div>
     <div id="hint-lower" class="hint-text">Lower Volume</div>
     <div id="hint-left" class="hint-text">Lower Speed</div>
@@ -314,7 +314,7 @@
     </div>
 
 <script>
-// ================= 响应式缩放 =================
+// ================= Responsive Scaling =================
 function scaleStage() {
     const container = document.getElementById('stage-container');
     
@@ -324,7 +324,7 @@ function scaleStage() {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    // 计算缩放比例，保持宽高比
+    // Calculate scale ratio, maintain aspect ratio
     const scaleX = windowWidth / designWidth;
     const scaleY = windowHeight / designHeight;
     const scale = Math.min(scaleX, scaleY);
@@ -332,13 +332,13 @@ function scaleStage() {
     container.style.transform = `scale(${scale})`;
 }
 
-// 初始化时调用
+// Call on initialization
 scaleStage();
 
-// 窗口大小改变时重新计算
+// Recalculate when window size changes
 window.addEventListener('resize', scaleStage);
 
-// ================= 配置区域 =================
+// ================= Configuration Area =================
 const HISTORY_SIZE = 90;
 const MIN_BPM = 60;
 const MAX_BPM = 180;
@@ -365,7 +365,7 @@ let currentPlaybackRate = 1.0;
 
 const CAM_Z = 8; 
 
-// ================= 乐器人物动画 =================
+// ================= Musician Animations =================
 function updateMusicianAnimations(channelStates) {
     const musicians = document.querySelectorAll('.musician[data-channel]');
     musicians.forEach(musician => {
@@ -378,7 +378,7 @@ function updateMusicianAnimations(channelStates) {
     });
 }
 
-// ================= 视口计算工具 =================
+// ================= Viewport Calculation Tool =================
 function getVisiblePlane(depth, camera) {
     const vFOV = camera.fov * Math.PI / 180; 
     const height = 2 * Math.tan(vFOV / 2) * depth;
@@ -386,7 +386,7 @@ function getVisiblePlane(depth, camera) {
     return { width, height };
 }
 
-// ================= Three.js 骨骼类 =================
+// ================= Three.js Skeleton Class =================
 class Hand3D {
     constructor(scene) {
         this.scene = scene;
@@ -442,7 +442,7 @@ class Hand3D {
             const distPip = Math.sqrt(Math.pow(pip.x-wrist.x,2)+Math.pow(pip.y-wrist.y,2));
             
             const isExtended = distTip > distPip + 0.05;
-            // 竖起来（激活）时变成黑色，否则保持灰色
+            // Black when extended (active), gray otherwise
             const color = isExtended ? 0x000000 : 0x888888;
             const opacity = isExtended ? 1.0 : 0.6;
 
@@ -487,7 +487,7 @@ function initThree() {
     });
 }
 
-// ================= 音频逻辑 =================
+// ================= Audio Logic =================
 async function initAudio() {
     await Tone.start();
     recorder = new Tone.Recorder();
@@ -525,7 +525,7 @@ async function initAudio() {
     channels.strings.volume.value = -Infinity;
     channels.wind.volume.value = -Infinity;
 
-    Tone.Destination.volume.value = 10; // 提高整体音量基线
+    Tone.Destination.volume.value = 10; // Increase overall volume baseline
 
     await Promise.all([Tone.loaded()]);
 
@@ -535,7 +535,7 @@ async function initAudio() {
     channels.wind.start();
 }
 
-// ================= 交互处理 =================
+// ================= Interaction Handling =================
 function processConducting(results) {
     const hands = results.multiHandLandmarks;
     const handedness = results.multiHandedness;
@@ -563,30 +563,30 @@ function processConducting(results) {
 }
 
 function calculateDynamics(leftPos, rightPos) {
-    // 新的交互逻辑：基于两只手之间的距离控制播放速度
-    // 距离越远 -> 播放越慢，距离越近 -> 播放越快
-    
+    // New interaction logic: control playback speed based on distance between two hands
+    // Greater distance -> slower playback, closer distance -> faster playback
+
     if (leftPos && rightPos) {
-        // 计算两只手之间的距离
+        // Calculate distance between two hands
         const distance = Math.hypot(leftPos.x - rightPos.x, leftPos.y - rightPos.y);
         
-        // 将距离映射到播放速度
-        // 距离接近0（手靠近） -> 速度2.0（快）
-        // 距离接近1（手远离） -> 速度0.5（慢）
-        // 使用指数函数使变化更平滑
+        // Map distance to playback speed
+        // Distance near 0 (hands close) -> speed 2.0 (fast)
+        // Distance near 1 (hands far) -> speed 0.5 (slow)
+        // Use exponential function for smoother transitions
         currentPlaybackRate = 2.0 - (distance * 1.5);
         currentPlaybackRate = Math.max(0.5, Math.min(2.0, currentPlaybackRate));
         
-        // 确保音乐在播放
+        // Ensure music is playing
         if(Tone.Transport.state !== 'started') Tone.Transport.start();
-        Tone.Destination.volume.rampTo(10, 0.02); // 保持较高的整体音量
-        
+        Tone.Destination.volume.rampTo(10, 0.02); // Maintain higher overall volume
+
     } else {
-        // 只有一只手或没有手时，保持中等速度
+        // Maintain medium speed with one or no hands
         currentPlaybackRate = 1.0;
     }
     
-    // 更新所有音轨的播放速度
+    // Update playback rate for all tracks
     if (channels.drum) channels.drum.playbackRate = currentPlaybackRate;
     if (channels.piano) channels.piano.playbackRate = currentPlaybackRate;
     if (channels.strings) channels.strings.playbackRate = currentPlaybackRate;
@@ -594,11 +594,11 @@ function calculateDynamics(leftPos, rightPos) {
 }
 
 function updateChannelSwitches(hands, handedness) {
-    // 新的交互逻辑：手的高度（Y坐标）控制乐器音量
-    // Y坐标：0（屏幕顶端）到1（屏幕底端）
-    // 手在中间(0.5)时为正常音量(0dB)，在顶端时为更高音量
-    
-    // 初始化每个乐器的状态
+    // New interaction logic: hand height (Y coordinate) controls instrument volume
+    // Y coordinate: 0 (top of screen) to 1 (bottom of screen)
+    // Hand at center (0.5) is normal volume (0dB), at top is higher volume
+
+    // Initialize state for each instrument
     let instrumentControl = {
         drum: { active: false, volume: -Infinity, maxHeight: 1 },
         piano: { active: false, volume: -Infinity, maxHeight: 1 },
@@ -606,12 +606,12 @@ function updateChannelSwitches(hands, handedness) {
         wind: { active: false, volume: -Infinity, maxHeight: 1 }
     };
     
-    // 处理每只手
+    // Process each hand
     hands.forEach((lm, i) => {
         const wrist = lm[0];
-        const handHeight = wrist.y; // Y坐标，0到1
-        
-        // 检测每个手指是否伸展
+        const handHeight = wrist.y; // Y coordinate, 0 to 1
+
+        // Check if each finger is extended
         FINGER_MAP.forEach(f => {
             const tip = lm[f.tips[3]];
             const pip = lm[f.tips[1]];
@@ -619,7 +619,7 @@ function updateChannelSwitches(hands, handedness) {
             const distPip = Math.hypot(pip.x - wrist.x, pip.y - wrist.y);
             const isExtended = distTip > distPip + 0.05;
             
-            // 根据手指映射到乐器
+            // Map finger to instrument
             let instrument = null;
             if (f.name === 'index') instrument = 'drum';
             else if (f.name === 'middle') instrument = 'piano';
@@ -628,7 +628,7 @@ function updateChannelSwitches(hands, handedness) {
             
             if (instrument && isExtended) {
                 instrumentControl[instrument].active = true;
-                // 记录最小的Y值（最靠近顶端的手）
+                // Record minimum Y value (hand closest to top)
                 if (handHeight < instrumentControl[instrument].maxHeight) {
                     instrumentControl[instrument].maxHeight = handHeight;
                 }
@@ -636,12 +636,12 @@ function updateChannelSwitches(hands, handedness) {
         });
     });
     
-    // 根据高度计算音量并应用
+    // Calculate and apply volume based on height
     const t = 0.1;
     Object.keys(instrumentControl).forEach(inst => {
         const control = instrumentControl[inst];
         if (control.active) {
-            // Y=0.5(中间)时为0dB，Y=0(顶端)时为+15dB，Y=1(底端)时为-15dB
+            // Y=0.5(center) is 0dB, Y=0(top) is +15dB, Y=1(bottom) is -15dB
             const volume = (0.5 - control.maxHeight) * 30;
             channels[inst].volume.rampTo(volume, t);
         } else {
@@ -649,7 +649,7 @@ function updateChannelSwitches(hands, handedness) {
         }
     });
 
-    // 更新乐器人物动画
+    // Update musician animations
     updateMusicianAnimations({
         drum: instrumentControl.drum.active,
         piano: instrumentControl.piano.active,
@@ -679,11 +679,11 @@ async function finishPerformance() {
     currentState = 'VISUALIZING';
     
     document.getElementById('video-element').style.opacity = '0';
-    setTimeout(() => { 
-        document.getElementById('video-container').style.display = 'none'; 
+    setTimeout(() => {
+        document.getElementById('video-container').style.display = 'none';
         document.querySelectorAll('.musician').forEach(m => m.style.display = 'none');
         document.getElementById('stage-wrapper').style.background = '#000000';
-        // 隐藏提示文字
+        // Hide hint texts
         document.querySelectorAll('.hint-text').forEach(h => h.style.display = 'none');
     }, 1000);
 
@@ -773,7 +773,7 @@ document.getElementById('start-btn').addEventListener('click', async () => {
         currentState = 'CONDUCTING';
         animate();
     } catch(error) {
-        alert('摄像头启动失败: ' + error.message);
+        alert('Camera startup failed: ' + error.message);
         console.error(error);
         btn.innerText = 'START CONDUCTING';
         btn.disabled = false;
